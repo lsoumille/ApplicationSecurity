@@ -214,36 +214,69 @@ public class SqueletonTripleDES{
 							String KeyGeneratorInstanceName, 
 							String CipherInstanceName){
 		try{
-		
+
+		    Vector<Key> vKeys = new Vector<Key>();
+
 			// GENERATE 3 DES KEYS
-			// GENERATE THE IV
+			KeyGenerator kg = KeyGenerator.getInstance(KeyGeneratorInstanceName);
+			SecretKey secretKey1 = kg.generateKey();
+			SecretKey secretKey2 = kg.generateKey();
+			SecretKey secretKey3 = kg.generateKey();
+
+			vKeys.add(secretKey1);
+			vKeys.add(secretKey2);
+			vKeys.add(secretKey3);
 		
 			// CREATE A DES CIPHER OBJECT 
 				// WITH CipherInstanceName
 				// FOR ENCRYPTION 
 				// WITH THE FIRST GENERATED DES KEY
+            Cipher cipher1 = Cipher.getInstance(CipherInstanceName);
+
+                // GENERATE THE IV (based on the length of cipher1)
+            SecureRandom randomSecureRandom = SecureRandom.getInstance("SHA1PRNG");
+            byte[] iv = new byte[cipher1.getBlockSize()];
+            randomSecureRandom.nextBytes(iv); //permet d'avoir un nombre random de taille iv bits
+
+            IvParameterSpec ivParams = new IvParameterSpec(iv);
+
+            cipher1.init(Cipher.ENCRYPT_MODE, secretKey1, ivParams);
 			
 			// CREATE A DES CIPHER OBJECT 
 				// WITH CipherInstanceName
 				// FOR DECRYPTION
 				// WITH THE SECOND GENERATED DES KEY
-				
+            Cipher cipher2 = Cipher.getInstance(CipherInstanceName);
+            cipher2.init(Cipher.DECRYPT_MODE, secretKey2, ivParams);
+
 			// CREATE A DES CIPHER OBJECT 
 				// WITH CipherInstanceName 
 				// FOR ENCRYPTION
 				// WITH THE THIRD GENERATED DES KEY
-				
+            Cipher cipher3 = Cipher.getInstance(CipherInstanceName);
+            cipher3.init(Cipher.ENCRYPT_MODE, secretKey3, ivParams);
+
 			// GET THE DATA TO BE ENCRYPTED FROM IN 
-			
+            ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
+            int content;
+            while ((content = in.read()) != -1) {
+                dataStream.write(content);
+            }
+            byte[] plainText = dataStream.toByteArray();
+
 			// CIPHERING     
 				// CIPHER WITH THE FIRST KEY
 				// DECIPHER WITH THE SECOND KEY
 				// CIPHER WITH THE THIRD KEY
+            byte[] cipherText = cipher3.doFinal(cipher2.doFinal(cipher1.doFinal(plainText)));
 
 			// WRITE THE ENCRYPTED DATA IN OUT
-			
-			// return the DES keys list generated		
-			return null;
+            BufferedOutputStream buff = new BufferedOutputStream(out);
+            buff.write(cipherText);
+            buff.close();
+
+            // return the DES keys list generated
+			return vKeys;
 			
 		}catch(Exception e){
 			e.printStackTrace();
@@ -259,32 +292,56 @@ public class SqueletonTripleDES{
 						FileOutputStream out, 
 						String CipherInstanceName){
 		try{
-		
+		    Vector<Key> vKeys = Parameters;
+
+
 			// CREATE A DES CIPHER OBJECT 
 				// WITH CipherInstanceName
 				// FOR DECRYPTION 
 				// WITH THE THIRD GENERATED DES KEY
-			
+            Cipher cipher1 = Cipher.getInstance(CipherInstanceName);
+
+            SecureRandom randomSecureRandom = SecureRandom.getInstance("SHA1PRNG");
+            byte[] iv = new byte[cipher1.getBlockSize()];
+            randomSecureRandom.nextBytes(iv); //permet d'avoir un nombre random de taille iv bits
+            IvParameterSpec ivParams = new IvParameterSpec(iv);
+
+            cipher1.init(Cipher.DECRYPT_MODE, vKeys.get(2), ivParams);
+
 			// CREATE A DES CIPHER OBJECT 
 				// WITH CipherInstanceName
 				// FOR DECRYPTION
 				// WITH THE SECOND GENERATED DES KEY
-				
+            Cipher cipher2 = Cipher.getInstance(CipherInstanceName);
+            cipher2.init(Cipher.ENCRYPT_MODE, vKeys.get(1), ivParams);
+
 			// CREATE A DES CIPHER OBJECT WITH DES/EBC/PKCS5PADDING FOR ENCRYPTION
 				// WITH CipherInstanceName
 				// FOR ENCRYPTION
 				// WITH THE FIRST GENERATED DES KEY
-			
+            Cipher cipher3 = Cipher.getInstance(CipherInstanceName);
+            cipher3.init(Cipher.DECRYPT_MODE, vKeys.get(0), ivParams);
+
 			// GET ENCRYPTED DATA FROM IN
-			
+            ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
+            int content;
+            while ((content = in.read()) != -1) {
+                dataStream.write(content);
+            }
+            byte[] cipherText = dataStream.toByteArray();
+
 			// DECIPHERING     
 				// DECIPHER WITH THE THIRD KEY
 				// 	CIPHER WITH THE SECOND KEY
 				// 	DECIPHER WITH THE FIRST KEY
+            byte[] plainText = cipher3.doFinal(cipher2.doFinal(cipher1.doFinal(cipherText)));
 
 			// WRITE THE DECRYPTED DATA IN OUT
-			
-		}catch(Exception e){
+            BufferedOutputStream buff = new BufferedOutputStream(out);
+            buff.write(plainText);
+            buff.close();
+
+        }catch(Exception e){
 			e.printStackTrace();
 		}
 
