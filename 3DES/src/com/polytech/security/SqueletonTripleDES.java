@@ -93,6 +93,11 @@ public class SqueletonTripleDES{
 			//K3
 			Key K3 = keyGenerator.generateKey();
 
+			Vector<Key> vKeys = new Vector<>();
+			vKeys.add(K1);
+			vKeys.add(K2);
+			vKeys.add(K3);
+
 
 			// CREATE A DES CIPHER OBJECT 
 				// WITH CipherInstanceName
@@ -122,17 +127,22 @@ public class SqueletonTripleDES{
                 dataStream.write(content);
             }
             byte[] message = dataStream.toByteArray();
+            dataStream.close();
 
 			// CIPHERING     
 				// CIPHER WITH THE FIRST KEY
 				// DECIPHER WITH THE SECOND KEY
 				// CIPHER WITH THE THIRD KEY
 				// write encrypted file
-            //byte[] encrypted = ;
+            byte[] encryptedMessage = C3.doFinal(C2.doFinal(C1.doFinal(message)));
+
 			// WRITE THE ENCRYPTED DATA IN OUT
-			
+            BufferedOutputStream buff = new BufferedOutputStream(out);
+            buff.write(encryptedMessage);
+            buff.close();
+
 			// return the DES keys list generated		
-			return null;
+			return vKeys;
 			
 		}catch(Exception e){
 			e.printStackTrace();
@@ -154,26 +164,42 @@ public class SqueletonTripleDES{
 				// WITH CipherInstanceName
 				// FOR DECRYPTION 
 				// WITH THE THIRD GENERATED DES KEY
-			
+			Cipher C1 = Cipher.getInstance(CipherInstanceName);
+			C1.init(Cipher.DECRYPT_MODE, (Key) Parameters.get(2));
+
 			// CREATE A DES CIPHER OBJECT 
 				// WITH CipherInstanceName
-				// FOR DECRYPTION
+				// FOR ENCRYPTION
 				// WITH THE SECOND GENERATED DES KEY
+            Cipher C2 = Cipher.getInstance(CipherInstanceName);
+            C2.init(Cipher.ENCRYPT_MODE, (Key) Parameters.get(1));
 				
 			// CREATE A DES CIPHER OBJECT WITH DES/EBC/PKCS5PADDING FOR ENCRYPTION
 				// WITH CipherInstanceName
-				// FOR ENCRYPTION
+				// FOR DECRYPTION
 				// WITH THE FIRST GENERATED DES KEY
+            Cipher C3 = Cipher.getInstance(CipherInstanceName);
+            C3.init(Cipher.DECRYPT_MODE, (Key) Parameters.get(0));
 			
 			// GET THE ENCRYPTED DATA FROM IN
-			
+            ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
+            int content;
+            while ((content = in.read()) != -1) {
+                dataStream.write(content);
+            }
+            byte[] encryptedMessage = dataStream.toByteArray();
+            dataStream.close();
+
 			// DECIPHERING     
 				// DECIPHER WITH THE THIRD KEY
 				// 	CIPHER WITH THE SECOND KEY
 				// 	DECIPHER WITH THE FIRST KEY
+            byte[] message = C3.doFinal(C2.doFinal(C1.doFinal(encryptedMessage)));
 
 			// WRITE THE DECRYPTED DATA IN OUT
-			
+            BufferedOutputStream buff = new BufferedOutputStream(out);
+            buff.write(message);
+            buff.close();
 		}catch(Exception e){
 			e.printStackTrace();
 		}
