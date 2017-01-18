@@ -235,27 +235,39 @@ public class SqueletonTripleDES{
 
                 // GENERATE THE IV (based on the length of cipher1)
             SecureRandom randomSecureRandom = SecureRandom.getInstance("SHA1PRNG");
-            byte[] iv = new byte[cipher1.getBlockSize()];
-            randomSecureRandom.nextBytes(iv); //permet d'avoir un nombre random de taille iv bits
+            byte[] iv1 = new byte[cipher1.getBlockSize()];
+            randomSecureRandom.nextBytes(iv1); //permet d'avoir un nombre random de taille iv bits
+            IvParameterSpec ivParams1 = new IvParameterSpec(iv1);
+            vectorParams.add(ivParams1);
 
-            IvParameterSpec ivParams = new IvParameterSpec(iv);
-            vectorParams.add(ivParams);
 
-            cipher1.init(Cipher.ENCRYPT_MODE, secretKey1, ivParams);
-			
+            cipher1.init(Cipher.ENCRYPT_MODE, secretKey1, ivParams1);
+
 			// CREATE A DES CIPHER OBJECT 
 				// WITH CipherInstanceName
 				// FOR DECRYPTION
 				// WITH THE SECOND GENERATED DES KEY
             Cipher cipher2 = Cipher.getInstance(CipherInstanceName);
-            cipher2.init(Cipher.DECRYPT_MODE, secretKey2, ivParams);
+
+            byte[] iv2 = new byte[cipher2.getBlockSize()];
+            randomSecureRandom.nextBytes(iv2);
+            IvParameterSpec ivParams2 = new IvParameterSpec(iv2);
+            vectorParams.add(ivParams2);
+
+            cipher2.init(Cipher.DECRYPT_MODE, secretKey2, ivParams2);
 
 			// CREATE A DES CIPHER OBJECT 
 				// WITH CipherInstanceName 
 				// FOR ENCRYPTION
 				// WITH THE THIRD GENERATED DES KEY
             Cipher cipher3 = Cipher.getInstance(CipherInstanceName);
-            cipher3.init(Cipher.ENCRYPT_MODE, secretKey3, ivParams);
+
+            byte[] iv3 = new byte[cipher3.getBlockSize()];
+            randomSecureRandom.nextBytes(iv3);
+            IvParameterSpec ivParams3 = new IvParameterSpec(iv3);
+            vectorParams.add(ivParams3);
+
+            cipher3.init(Cipher.ENCRYPT_MODE, secretKey3, ivParams3);
 
 			// GET THE DATA TO BE ENCRYPTED FROM IN 
             ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
@@ -294,26 +306,34 @@ public class SqueletonTripleDES{
 						String CipherInstanceName){
 		try{
 
-			// CREATE A DES CIPHER OBJECT 
+		    SecretKey secretKey1 = (SecretKey) Parameters.get(0);
+		    SecretKey secretKey2 = (SecretKey) Parameters.get(1);
+		    SecretKey secretKey3 = (SecretKey) Parameters.get(2);
+
+		    IvParameterSpec ivParams1 = (IvParameterSpec) Parameters.get(3);
+            IvParameterSpec ivParams2 = (IvParameterSpec) Parameters.get(4);
+            IvParameterSpec ivParams3 = (IvParameterSpec) Parameters.get(5);
+
+            // CREATE A DES CIPHER OBJECT
 				// WITH CipherInstanceName
 				// FOR DECRYPTION 
 				// WITH THE THIRD GENERATED DES KEY
             Cipher cipher1 = Cipher.getInstance(CipherInstanceName);
-            cipher1.init(Cipher.DECRYPT_MODE, (SecretKey) Parameters.get(2), (IvParameterSpec) Parameters.get(3));
+            cipher1.init(Cipher.DECRYPT_MODE, secretKey3, ivParams3);
 
 			// CREATE A DES CIPHER OBJECT 
 				// WITH CipherInstanceName
 				// FOR DECRYPTION
 				// WITH THE SECOND GENERATED DES KEY
             Cipher cipher2 = Cipher.getInstance(CipherInstanceName);
-            cipher2.init(Cipher.ENCRYPT_MODE, (SecretKey) Parameters.get(1), (IvParameterSpec) Parameters.get(3));
+            cipher2.init(Cipher.ENCRYPT_MODE, secretKey2, ivParams2);
 
 			// CREATE A DES CIPHER OBJECT WITH DES/EBC/PKCS5PADDING FOR ENCRYPTION
 				// WITH CipherInstanceName
 				// FOR ENCRYPTION
 				// WITH THE FIRST GENERATED DES KEY
             Cipher cipher3 = Cipher.getInstance(CipherInstanceName);
-            cipher3.init(Cipher.DECRYPT_MODE, (SecretKey) Parameters.get(0), (IvParameterSpec) Parameters.get(3));
+            cipher3.init(Cipher.DECRYPT_MODE, secretKey1, ivParams1);
 
 			// GET ENCRYPTED DATA FROM IN
             ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
